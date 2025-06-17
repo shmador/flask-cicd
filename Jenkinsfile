@@ -12,7 +12,9 @@ pipeline {
             }
         }
         stage ('Deploy on local cluster with helm') {
-            sh "./helm upgrade --install app"
+            steps {
+                sh "./helm upgrade --install app"
+            }
         }
     }
 }
