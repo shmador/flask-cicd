@@ -24,7 +24,7 @@ pipeline {
         }
         stage ('Deploy on local cluster with helm') {
             steps {
-                sh "./helm upgrade --install app"
+                sh "helm upgrade --install app"
             }
         }
     }
