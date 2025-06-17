@@ -1,0 +1,2 @@
+docker build -t shmador/flask-ip .
+docker push shmador/flask-ip
