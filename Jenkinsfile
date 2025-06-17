@@ -3,16 +3,16 @@ pipeline {
     stages {
         stage ('Run python tests') {
             steps {
-                python3 test-app                   
+                sh "python3 test-app"                   
             }
         }
         stage ('Build and push docker image') {
             steps {
-                ./build
+                sh "./build"
             }
         }
         stage ('Deploy on local cluster with helm') {
-            helm upgrade --install app
+            sh "./helm upgrade --install app"
         }
     }
 }
