@@ -2,6 +2,7 @@ pipeline {
   agent {
     kubernetes {
       // pick the default container for steps without an explicit container() wrapper
+      cloud 'imtech-eks'
       defaultContainer 'docker'
       yaml """
 apiVersion: v1
