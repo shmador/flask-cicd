@@ -40,12 +40,6 @@ spec:
       command:
         - cat
       tty: true
-
-    - name: curl
-      image: byrnedo/alpine-curl:latest
-      command:
-        - cat
-      tty: true
 """
     }
   }
@@ -93,13 +87,12 @@ spec:
   post {
     always {
       withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'WEBHOOK')]) {
-        container('curl') {
-          sh """
-            curl -X POST -H 'Content-Type: application/json' \
-              --data '{\"text\":\"Build *${JOB_NAME}* #${BUILD_NUMBER} — *${currentBuild.currentResult}*\\n${BUILD_URL}\"}' \
-              ${WEBHOOK}
-          """
-        }
+        httpRequest(
+          httpMode:    'POST',
+          url:         env.WEBHOOK,
+          contentType: 'APPLICATION_JSON',
+          requestBody: """{"text":"Build *${env.JOB_NAME}* #${env.BUILD_NUMBER} — *${currentBuild.currentResult}*\\n${env.BUILD_URL}"}"""
+        )
       }
     }
   }
