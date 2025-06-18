@@ -43,7 +43,7 @@ spec:
       tty: true
 
     - name: helm
-      image: helm/helm:v3.7.1
+      image: alpine/helm:3.10.0
       imagePullPolicy: IfNotPresent
       command:
         - cat
