@@ -39,7 +39,7 @@ spec:
         - cat
       tty: true
     - name: curl
-      image: curlimages/curl:latest
+      image: byrnedo/alpine-curl:latest
       command:
         - cat
       tty: true
