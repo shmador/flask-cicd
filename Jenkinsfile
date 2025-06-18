@@ -2,7 +2,7 @@ pipeline {
   agent {
     kubernetes {
       cloud 'imtech-eks'
-      defaultContainer 'kaniko'
+      defaultContainer 'docker'
       yaml """
 apiVersion: v1
 kind: Pod
@@ -12,19 +12,22 @@ spec:
     - name: kaniko
       image: gcr.io/kaniko-project/executor:latest
       command:
-        - cat
+        - sleep
+        - infinity
       tty: true
 
     - name: python
       image: python:3.9
       command:
-        - cat
+        - sleep
+        - infinity
       tty: true
 
     - name: helm
       image: alpine/helm:3.10.0
       command:
-        - cat
+        - sleep
+        - infinity
       tty: true
 
     - name: jnlp
@@ -38,8 +41,8 @@ spec:
   }
 
   environment {
-    REGISTRY   = 'your.registry.io'          // ← e.g. index.docker.io or my-registry.com
-    REPO       = 'myorg/myapp'               // ← e.g. shmador/flask-cicd
+    REGISTRY   = 'your.registry.io'
+    REPO       = 'shmador/flask-cicd'
     IMAGE_TAG  = "${env.BUILD_NUMBER}"
   }
 
@@ -57,7 +60,6 @@ spec:
             passwordVariable: 'DOCKER_PASS'
           )]) {
             sh '''
-# write a minimal docker config for Kaniko auth
 mkdir -p /kaniko/.docker
 cat > /kaniko/.docker/config.json <<EOF
 {
@@ -70,7 +72,6 @@ cat > /kaniko/.docker/config.json <<EOF
 }
 EOF
 
-# now build & push
 /kaniko/executor \
   --context "${WORKSPACE}" \
   --dockerfile "${WORKSPACE}/Dockerfile" \
