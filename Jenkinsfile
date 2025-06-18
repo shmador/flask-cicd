@@ -101,15 +101,15 @@ spec:
 
   post {
     always {
-      mail(
-        to:      'dorattar4@gmail.com',
-        subject: "Build ${env.JOB_NAME} #${env.BUILD_NUMBER} – ${currentBuild.currentResult}",
-        body:    """\
-Build: ${env.JOB_NAME} #${env.BUILD_NUMBER}
-Result: ${currentBuild.currentResult}
-URL:    ${env.BUILD_URL}
-"""
-      )
+      withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'WEBHOOK')]) {
+        sh '''
+          curl -X POST -H 'Content-type: application/json' \
+               --data '{
+                 "text":"Build *${JOB_NAME}* #${BUILD_NUMBER} — *${currentBuild.currentResult}*\\n${BUILD_URL}"
+               }' \
+               "$WEBHOOK"
+        '''
+      }
     }
   }
 }
