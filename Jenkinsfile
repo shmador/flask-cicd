@@ -67,7 +67,10 @@ spec:
     stage('Run Python Tests') {
       steps {
         container('python') {
-          sh 'python3 test-app.py'
+          sh '''
+            pip install pytest
+            python3 test-app.py
+          '''
         }
       }
     }
