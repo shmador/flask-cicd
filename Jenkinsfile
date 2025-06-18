@@ -12,22 +12,25 @@ spec:
     - name: kaniko
       image: gcr.io/kaniko-project/executor:latest
       command:
-        - sleep
-        - infinity
+        - sh
+        - -c
+        - while true; do sleep 30; done
       tty: true
 
     - name: python
       image: python:3.9
       command:
-        - sleep
-        - infinity
+        - sh
+        - -c
+        - while true; do sleep 30; done
       tty: true
 
     - name: helm
       image: alpine/helm:3.10.0
       command:
-        - sleep
-        - infinity
+        - sh
+        - -c
+        - while true; do sleep 30; done
       tty: true
 
     - name: jnlp
