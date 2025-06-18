@@ -92,12 +92,12 @@ spec:
 
   post {
     always {
-      container('curl') {
-        withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'WEBHOOK')]) {
+      withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'WEBHOOK')]) {
+        container('curl') {
           sh """
             curl -X POST -H 'Content-Type: application/json' \
-              --data '{\"text\":\"Build ${JOB_NAME} #${BUILD_NUMBER} — ${currentBuild.currentResult}\\n${BUILD_URL}\"}' \
-              $WEBHOOK
+              --data '{\"text\":\"Build *${JOB_NAME}* #${BUILD_NUMBER} — *${currentBuild.currentResult}*\\n${BUILD_URL}\"}' \
+              ${WEBHOOK}
           """
         }
       }
