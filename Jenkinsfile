@@ -90,7 +90,7 @@ spec:
     stage('Deploy with Helm') {
       steps {
         container('helm') {
-          sh './deploy'
+          sh '../deploy'
         }
       }
     }
