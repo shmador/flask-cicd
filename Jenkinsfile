@@ -2,39 +2,18 @@ pipeline {
   agent {
     kubernetes {
       cloud 'imtech-eks'
-      defaultContainer 'docker'
+      defaultContainer 'kaniko'
       yaml """
 apiVersion: v1
 kind: Pod
 spec:
   serviceAccountName: default
-  securityContext:
-    fsGroup: 1000
-  volumes:
-    - name: docker-graph-storage
-      emptyDir: {}
   containers:
-    - name: docker
-      image: docker:20.10.7
+    - name: kaniko
+      image: gcr.io/kaniko-project/executor:latest
       command:
         - cat
       tty: true
-      volumeMounts:
-        - name: docker-graph-storage
-          mountPath: /var/lib/docker
-      securityContext:
-        privileged: true
-
-    - name: dind
-      image: docker:20.10.7-dind
-      command:
-        - dockerd-entrypoint.sh
-      tty: true
-      securityContext:
-        privileged: true
-      volumeMounts:
-        - name: docker-graph-storage
-          mountPath: /var/lib/docker
 
     - name: python
       image: python:3.9
@@ -44,24 +23,60 @@ spec:
 
     - name: helm
       image: alpine/helm:3.10.0
-      imagePullPolicy: IfNotPresent
       command:
         - cat
       tty: true
+
+    - name: jnlp
+      image: jenkins/inbound-agent:latest
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "256Mi"
 """
     }
   }
 
+  environment {
+    REGISTRY   = 'your.registry.io'          // ← e.g. index.docker.io or my-registry.com
+    REPO       = 'myorg/myapp'               // ← e.g. shmador/flask-cicd
+    IMAGE_TAG  = "${env.BUILD_NUMBER}"
+  }
+
   stages {
-    stage('Login to Docker Registry') {
+    stage('Checkout') {
+      steps { checkout scm }
+    }
+
+    stage('Build & Push with Kaniko') {
       steps {
-        container('docker') {
+        container('kaniko') {
           withCredentials([usernamePassword(
             credentialsId: 'docker',
             usernameVariable: 'DOCKER_USER',
             passwordVariable: 'DOCKER_PASS'
           )]) {
-            sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
+            sh '''
+# write a minimal docker config for Kaniko auth
+mkdir -p /kaniko/.docker
+cat > /kaniko/.docker/config.json <<EOF
+{
+  "auths": {
+    "${REGISTRY}": {
+      "username": "${DOCKER_USER}",
+      "password": "${DOCKER_PASS}"
+    }
+  }
+}
+EOF
+
+# now build & push
+/kaniko/executor \
+  --context "${WORKSPACE}" \
+  --dockerfile "${WORKSPACE}/Dockerfile" \
+  --destination "${REGISTRY}/${REPO}:${IMAGE_TAG}" \
+  --cleanup
+'''
           }
         }
       }
@@ -75,15 +90,7 @@ spec:
       }
     }
 
-    stage('Build and push docker image') {
-      steps {
-        container('docker') {
-          sh './build'
-        }
-      }
-    }
-
-    stage('Deploy on local cluster with helm') {
+    stage('Deploy with Helm') {
       steps {
         container('helm') {
           sh './deploy'
