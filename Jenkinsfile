@@ -69,6 +69,7 @@ spec:
         container('python') {
           sh '''
             pip install pytest
+            pip install flask
             python3 test-app.py
           '''
         }
