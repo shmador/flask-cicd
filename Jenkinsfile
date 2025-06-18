@@ -99,10 +99,9 @@ spec:
     always {
       withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'WEBHOOK')]) {
         slackSend(
-          channel: '#your-channel',
           webhookUrl: WEBHOOK,
-          color: (currentBuild.currentResult == 'SUCCESS' ? 'good' : 'danger'),
-          message: "Build *${env.JOB_NAME}* #${env.BUILD_NUMBER} — *${currentBuild.currentResult}*\n${env.BUILD_URL}"
+          color:      (currentBuild.currentResult == 'SUCCESS' ? 'good' : 'danger'),
+          message:    "Build *${env.JOB_NAME}* #${env.BUILD_NUMBER} — *${currentBuild.currentResult}*\n${env.BUILD_URL}"
         )
       }
     }
