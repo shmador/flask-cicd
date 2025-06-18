@@ -9,7 +9,7 @@ kind: Pod
 spec:
   serviceAccountName: default
   volumes:
-    - name: docker-graph-storage
+    - name: docker-graph
       emptyDir: {}
   containers:
     - name: docker
@@ -24,7 +24,7 @@ spec:
         - name: DOCKER_HOST
           value: tcp://127.0.0.1:2375
       volumeMounts:
-        - name: docker-graph-storage
+        - name: docker-graph
           mountPath: /var/lib/docker
 
     - name: python
@@ -38,12 +38,6 @@ spec:
       command:
         - cat
       tty: true
-
-    - name: jnlp
-      image: jenkins/inbound-agent:latest
-      args:
-        - \${computer.jnlpmac}
-        - \${computer.name}
 """
     }
   }
