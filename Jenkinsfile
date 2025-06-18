@@ -23,6 +23,8 @@ spec:
       env:
         - name: DOCKER_HOST
           value: tcp://127.0.0.1:2375
+        - name: DOCKER_TLS_CERTDIR
+          value: ""
       volumeMounts:
         - name: docker-graph
           mountPath: /var/lib/docker
