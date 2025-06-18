@@ -68,8 +68,7 @@ spec:
       steps {
         container('python') {
           sh '''
-            pip install pytest
-            pip install flask
+            pip install pytest flask
             python3 test-app.py
           '''
         }
@@ -101,14 +100,17 @@ spec:
 
   post {
     always {
-      withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'WEBHOOK')]) {
-        sh '''
-          curl -X POST -H 'Content-type: application/json' \
-               --data '{
-                 "text":"Build *${JOB_NAME}* #${BUILD_NUMBER} — *${currentBuild.currentResult}*\\n${BUILD_URL}"
-               }' \
-               "$WEBHOOK"
-        '''
+      container('docker') {
+        withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'WEBHOOK')]) {
+          sh '''
+            apt-get update && apt-get install -y curl
+            curl -X POST -H 'Content-type: application/json' \
+                 --data '{
+                   "text":"Build *${JOB_NAME}* #${BUILD_NUMBER} — *${currentBuild.currentResult}*\\n${BUILD_URL}"
+                 }' \
+                 "$WEBHOOK"
+          '''
+        }
       }
     }
   }
