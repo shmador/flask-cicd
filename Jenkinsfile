@@ -84,7 +84,7 @@ spec:
 
   post {
     always {
-      slackSend channel: 'Tal',
+      slackSend channel: '#imtech',
                 message: "Find Status of Pipeline:- ${currentBuild.currentResult} ${env.JOB_NAME} ${env.BUILD_NUMBER} ${BUILD_URL}"
     }
   }
