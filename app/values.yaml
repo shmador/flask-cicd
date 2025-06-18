@@ -9,7 +9,7 @@ replicaCount: 1
 image:
   repository: shmador/flask-ip
   # This sets the pull policy for images.
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
@@ -51,32 +51,15 @@ securityContext: {}
 
 # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
-  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
-  type: ClusterIP
+ # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  externalTrafficPolicy: Local
+  type: LoadBalancer
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 5000
-
+  port: 80
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 
 ingress:
-  enabled: true
-  ingressClassName: nginx
-
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/rewrite-target: /
-
-  hosts:
-    - host: localhost
-      paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: app
-              port:
-                number: 5000
-
+  enabled: false
   tls: []
 
 
@@ -99,9 +82,9 @@ resources: {}
 
 # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 #livenessProbe:
-#  httpGet:
-#    path: /
-#    port: http
+#httpGet:
+# path: /
+# port: http
 #readinessProbe:
 # httpGet:
 #   path: /

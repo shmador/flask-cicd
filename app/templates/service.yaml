@@ -4,11 +4,16 @@ metadata:
   name: {{ include "app.fullname" . }}
   labels:
     {{- include "app.labels" . | nindent 4 }}
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-internal: "false"      
 spec:
   type: {{ .Values.service.type }}
+  externalTrafficPolicy: Local
+  internalTrafficPolicy: Local
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: 5000
+      targetPort: http
       protocol: TCP
       name: http
   selector:
