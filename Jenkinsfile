@@ -53,7 +53,7 @@ spec:
             usernameVariable: 'DOCKER_USER',
             passwordVariable: 'DOCKER_PASS'
           )]) {
-            sh '''\
+            sh '''
               echo "$DOCKER_PASS" \
                 | docker login \
                   -u "$DOCKER_USER" \
@@ -79,7 +79,7 @@ spec:
     stage('Build & Push Docker Image') {
       steps {
         container('docker') {
-          sh '''\
+          sh '''
             until docker info >/dev/null 2>&1; do sleep 1; done
             ./build
           '''
@@ -96,6 +96,20 @@ spec:
           '''
         }
       }
+    }
+  }
+
+  post {
+    always {
+      mail(
+        to:      'dorattar4@gmail.com',
+        subject: "Build ${env.JOB_NAME} #${env.BUILD_NUMBER} – ${currentBuild.currentResult}",
+        body:    """\
+Build: ${env.JOB_NAME} #${env.BUILD_NUMBER}
+Result: ${currentBuild.currentResult}
+URL:    ${env.BUILD_URL}
+"""
+      )
     }
   }
 }
