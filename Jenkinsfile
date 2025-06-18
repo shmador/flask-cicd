@@ -38,8 +38,17 @@ spec:
       command:
         - cat
       tty: true
+    - name: curl
+      image: curlimages/curl:latest
+      command:
+        - cat
+      tty: true
 """
     }
+  }
+
+  environment {
+    WEBHOOK_URL = credentials('slack-webhook-url')
   }
 
   stages {
@@ -84,8 +93,14 @@ spec:
 
   post {
     always {
-      slackSend channel: '#imtech',
-                message: "Find Status of Pipeline:- ${currentBuild.currentResult} ${env.JOB_NAME} ${env.BUILD_NUMBER} ${BUILD_URL}"
+      container('curl') {
+        sh """
+          curl -X POST \\
+            -H 'Content-Type: application/json' \\
+            --data '{\"text\":\"Pipeline '${env.JOB_NAME}' #${env.BUILD_NUMBER} finished with status: ${currentBuild.currentResult}\"}' \\
+            \"${WEBHOOK_URL}\"
+        """
+      }
     }
   }
 }
