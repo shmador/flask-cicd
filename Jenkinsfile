@@ -1,7 +1,7 @@
 pipeline {
   agent {
     kubernetes {
-      cloud 'kubernetes'
+      cloud 'imtech-eks'
       defaultContainer 'docker'
       yaml """
 apiVersion: v1
