@@ -40,12 +40,6 @@ spec:
       command:
         - cat
       tty: true
-
-    - name: curl
-      image: byrnedo/alpine-curl:latest
-      command:
-        - cat
-      tty: true
 """
     }
   }
@@ -60,10 +54,7 @@ spec:
             passwordVariable: 'DOCKER_PASS'
           )]) {
             sh '''
-              echo "$DOCKER_PASS" \
-                | docker login \
-                  -u "$DOCKER_USER" \
-                  --password-stdin
+              echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
             '''
           }
         }
@@ -106,15 +97,13 @@ spec:
 
   post {
     always {
-      container('curl') {
-        withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'WEBHOOK')]) {
-          sh '''
-            curl -X POST \
-                 -H "Content-Type: application/json" \
-                 --data "{\"text\":\"Build *${JOB_NAME}* #${BUILD_NUMBER} — *${currentBuild.currentResult}*\\n${BUILD_URL}\"}" \
-                 "$WEBHOOK"
-          '''
-        }
+      withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'WEBHOOK')]) {
+        slackSend(
+          channel: '#your-channel',
+          webhookUrl: WEBHOOK,
+          color: (currentBuild.currentResult == 'SUCCESS' ? 'good' : 'danger'),
+          message: "Build *${env.JOB_NAME}* #${env.BUILD_NUMBER} — *${currentBuild.currentResult}*\n${env.BUILD_URL}"
+        )
       }
     }
   }
