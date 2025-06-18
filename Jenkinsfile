@@ -7,89 +7,79 @@ pipeline {
 apiVersion: v1
 kind: Pod
 spec:
-  serviceAccountName: default
+  serviceAccountName: jenkins-admin
+  volumes:
+    - name: dockersock
+      emptyDir: {}
   containers:
-    - name: kaniko
-      image: gcr.io/kaniko-project/executor:latest
+    - name: docker
+      image: docker:20.10.7-dind
+      securityContext:
+        privileged: true
       command:
-        - sh
-        - -c
-        - while true; do sleep 30; done
-      tty: true
+        - dockerd-entrypoint.sh
+        - --host=tcp://0.0.0.0:2375
+        - --storage-driver=overlay2
+      env:
+        - name: DOCKER_HOST
+          value: tcp://127.0.0.1:2375
+      volumeMounts:
+        - name: dockersock
+          mountPath: /var/lib/docker
 
     - name: python
       image: python:3.9
       command:
-        - sh
-        - -c
-        - while true; do sleep 30; done
+        - cat
       tty: true
 
     - name: helm
       image: alpine/helm:3.10.0
       command:
-        - sh
-        - -c
-        - while true; do sleep 30; done
+        - cat
       tty: true
 
     - name: jnlp
       image: jenkins/inbound-agent:latest
-      resources:
-        requests:
-          cpu: "100m"
-          memory: "256Mi"
+      args:
+        - ${computer.jnlpmac}
+        - ${computer.name}
 """
     }
   }
 
-  environment {
-    REGISTRY   = 'your.registry.io'
-    REPO       = 'shmador/flask-cicd'
-    IMAGE_TAG  = "${env.BUILD_NUMBER}"
-  }
-
   stages {
-    stage('Checkout') {
-      steps { checkout scm }
-    }
-
-    stage('Build & Push with Kaniko') {
+    stage('Login to Docker Registry') {
       steps {
-        container('kaniko') {
+        container('docker') {
           withCredentials([usernamePassword(
             credentialsId: 'docker',
             usernameVariable: 'DOCKER_USER',
             passwordVariable: 'DOCKER_PASS'
           )]) {
             sh '''
-mkdir -p /kaniko/.docker
-cat > /kaniko/.docker/config.json <<EOF
-{
-  "auths": {
-    "${REGISTRY}": {
-      "username": "${DOCKER_USER}",
-      "password": "${DOCKER_PASS}"
-    }
-  }
-}
-EOF
-
-/kaniko/executor \
-  --context "${WORKSPACE}" \
-  --dockerfile "${WORKSPACE}/Dockerfile" \
-  --destination "${REGISTRY}/${REPO}:${IMAGE_TAG}" \
-  --cleanup
-'''
+              echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+            '''
           }
         }
       }
     }
 
-    stage('Run python tests') {
+    stage('Run Python Tests') {
       steps {
         container('python') {
           sh 'python3 test-app.py'
+        }
+      }
+    }
+
+    stage('Build & Push Docker Image') {
+      steps {
+        container('docker') {
+          sh '''
+            until docker info >/dev/null 2>&1; do sleep 1; done
+            ./build
+          '''
         }
       }
     }
