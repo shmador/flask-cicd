@@ -7,9 +7,9 @@ pipeline {
 apiVersion: v1
 kind: Pod
 spec:
-  serviceAccountName: jenkins-admin
+  serviceAccountName: default
   volumes:
-    - name: dockersock
+    - name: docker-graph-storage
       emptyDir: {}
   containers:
     - name: docker
@@ -24,7 +24,7 @@ spec:
         - name: DOCKER_HOST
           value: tcp://127.0.0.1:2375
       volumeMounts:
-        - name: dockersock
+        - name: docker-graph-storage
           mountPath: /var/lib/docker
 
     - name: python
@@ -42,8 +42,8 @@ spec:
     - name: jnlp
       image: jenkins/inbound-agent:latest
       args:
-        - ${computer.jnlpmac}
-        - ${computer.name}
+        - \${computer.jnlpmac}
+        - \${computer.name}
 """
     }
   }
