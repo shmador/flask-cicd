@@ -40,6 +40,12 @@ spec:
       command:
         - cat
       tty: true
+
+    - name: curl
+      image: byrnedo/alpine-curl:latest
+      command:
+        - cat
+      tty: true
 """
     }
   }
@@ -100,10 +106,9 @@ spec:
 
   post {
     always {
-      container('docker') {
+      container('curl') {
         withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'WEBHOOK')]) {
           sh '''
-            apt-get update && apt-get install -y curl
             curl -X POST -H 'Content-type: application/json' \
                  --data '{
                    "text":"Build *${JOB_NAME}* #${BUILD_NUMBER} — *${currentBuild.currentResult}*\\n${BUILD_URL}"
