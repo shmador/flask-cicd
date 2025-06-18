@@ -1,10 +1,4 @@
 #! /bin/bash
 
-# Add nginx crds
-kubectl apply -f https://raw.githubusercontent.com/nginx/kubernetes-ingress/v5.0.0/deploy/crds.yaml
-
-# Install NGINX Ingress Controller with Helm
-helm upgrade --install ingress oci://ghcr.io/nginx/charts/nginx-ingress --version 2.1.0
-
 # Deploy Flask app
 helm upgrade --install app app
