@@ -40,6 +40,12 @@ spec:
       command:
         - cat
       tty: true
+
+    - name: curl
+      image: byrnedo/alpine-curl:latest
+      command:
+        - cat
+      tty: true
 """
     }
   }
@@ -53,9 +59,7 @@ spec:
             usernameVariable: 'DOCKER_USER',
             passwordVariable: 'DOCKER_PASS'
           )]) {
-            sh '''
-              echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-            '''
+            sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
           }
         }
       }
@@ -64,10 +68,7 @@ spec:
     stage('Run Python Tests') {
       steps {
         container('python') {
-          sh '''
-            pip install pytest flask
-            python3 test-app.py
-          '''
+          sh 'pip install pytest flask && python3 test-app.py'
         }
       }
     }
@@ -75,10 +76,7 @@ spec:
     stage('Build & Push Docker Image') {
       steps {
         container('docker') {
-          sh '''
-            until docker info >/dev/null 2>&1; do sleep 1; done
-            ./build
-          '''
+          sh 'until docker info >/dev/null 2>&1; do sleep 1; done && ./build'
         }
       }
     }
@@ -86,10 +84,7 @@ spec:
     stage('Deploy with Helm') {
       steps {
         container('helm') {
-          sh '''
-            cd "$WORKSPACE"
-            sh deploy
-          '''
+          sh 'cd "$WORKSPACE" && sh deploy'
         }
       }
     }
@@ -97,12 +92,14 @@ spec:
 
   post {
     always {
-      withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'WEBHOOK')]) {
-        slackSend(
-          webhookUrl: WEBHOOK,
-          color:      (currentBuild.currentResult == 'SUCCESS' ? 'good' : 'danger'),
-          message:    "Build *${env.JOB_NAME}* #${env.BUILD_NUMBER} — *${currentBuild.currentResult}*\n${env.BUILD_URL}"
-        )
+      container('curl') {
+        withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'WEBHOOK')]) {
+          sh """
+            curl -X POST -H 'Content-Type: application/json' \
+              --data '{\"text\":\"Build ${JOB_NAME} #${BUILD_NUMBER} — ${currentBuild.currentResult}\\n${BUILD_URL}\"}' \
+              $WEBHOOK
+          """
+        }
       }
     }
   }
