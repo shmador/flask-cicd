@@ -7,7 +7,7 @@ pipeline {
 apiVersion: v1
 kind: Pod
 spec:
-  serviceAccountName: default
+  serviceAccountName: jenkins-admin
   volumes:
     - name: docker-graph
       emptyDir: {}
@@ -38,6 +38,13 @@ spec:
       command:
         - cat
       tty: true
+
+    - name: jnlp
+      image: jenkins/inbound-agent:latest
+      args:
+        - "\${computer.jnlpmac}"
+        - "\${computer.name}"
+      tty: true
 """
     }
   }
@@ -51,9 +58,7 @@ spec:
             usernameVariable: 'DOCKER_USER',
             passwordVariable: 'DOCKER_PASS'
           )]) {
-            sh '''
-              echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-            '''
+            sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
           }
         }
       }
